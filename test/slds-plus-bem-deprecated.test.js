@@ -1,5 +1,6 @@
 const stylelint = require("stylelint");
 const { configBasedir } = require("./setup");
+const path = require('path');
 
 const config = {
   plugins: ["./src"],
@@ -17,35 +18,27 @@ const invalidHtml = `
 `;
 
 describe('slds-plus-bem-deprecated rule', () => {
-    let mockResult;
-  
-    beforeEach(() => {
-      mockResult = {
-        warnings: [],
-      };
-      stylelint.utils.report = jest.fn((warning) => {
-        mockResult.warnings.push(warning);
-      });
+
+  it('should not report warnings for valid HTML', async () => {
+    const result = await stylelint.lint({
+      files: [path.join(__dirname, 'files/valid.html')],
+      config,
+      configBasedir,
     });
-  
-    it('should not report warnings for valid HTML', async () => {
-      await stylelint.lint({
-        code: '<div class="valid-class"></div>',
-        config,
-        configBasedir,
-      });
-  
-      expect(mockResult.warnings).toHaveLength(0);
-    });
-  
-    it('should report warnings for deprecated classes in HTML', async () => {
-      await stylelint.lint({
-        code: '<div class="slds-modal--form"></div>',
-        config: config,
-        configBasedir: configBasedir,
-      });
-  
-      expect(mockResult.warnings).toHaveLength(1);
-      expect(mockResult.warnings[0].text).toContain('The class "slds-deprecated-class" is deprecated according to the BEM metadata.');
-    });
+    const warnings = result.results[0].warnings;
+    expect(warnings).toHaveLength(0);
+    expect(warnings[0].text).toBe("Dave");
   });
+
+  it('should report warnings for deprecated classes in HTML', async () => {
+    const result = await stylelint.lint({
+      files: [path.join(__dirname, 'files/invalid.html')],
+      config: config,
+      configBasedir: configBasedir,
+    });
+
+    const warnings = result.results[0].warnings;
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0].text).toBe("Dave");
+  });
+});

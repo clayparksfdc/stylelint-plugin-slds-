@@ -1,67 +1,53 @@
-const stylelint = require("stylelint");
-const ruleName = "stylelint-plugin-slds/slds-plus-bem-deprecated";
-const fs = require('fs');
-const path = require('path');
 const { JSDOM } = require('jsdom');
-const PostcssSelectorParser = require('postcss-selector-parser');
+const stylelint = require('stylelint');
+
+const ruleName = 'stylelint-plugin-slds/slds-plus-bem-deprecated';
 const messages = {
   deprecated: 'The class "%s" is deprecated according to the BEM metadata.',
 };
 
-let dom;
+const checkHtml = (html, options) => {
+  const metadataPath = options.metadataPath || 'src/metadata/sldsPlus.metadata.json';
+  const metadata = require(metadataPath);
+  const deprecatedClasses = metadata.bem.css.deprecated.selectors;
 
-function parse(html) {
-  dom = new JSDOM(html);
-}
+  const dom = new JSDOM(html);
+  const elements = dom.window.document.querySelectorAll('*');
 
-function match(selectorAst) {
-  if (dom === undefined) {
-    throw new Error('Call parse() before match().');
-  }
-  const selector = selectorAst.toString();
-  const matched = dom.window.document.querySelector(selector);
-  return matched !== null;
-}
+  const warnings = [];
+
+  elements.forEach((element) => {
+    const classNames = element.className.split(' ');
+    classNames.forEach((className) => {
+      if (deprecatedClasses.includes(className)) {
+        warnings.push({
+          message: messages.deprecated.replace('%s', className),
+          severity: 'warning',
+        });
+      }
+    });
+  });
+
+  return warnings;
+};
 
 module.exports = stylelint.createPlugin(ruleName, (enabled, options) => {
-  console.log("2")
-  return (postcssRoot, postcssResult) => {
+  return (root, result) => {
     if (!enabled) return;
 
-    const metadataPath = options.metadataPath || 'src/metadata/sldsPlus.metadata.json';
-    const filePath = postcssResult.opts.from;
+    const filePath = options.from;
+    if (!filePath || !filePath.endsWith('.html')) return;
 
-    if (!filePath || path.extname(filePath) !== '.html') {
-      return;
-    }
+    const html = require('fs').readFileSync(filePath, 'utf-8');
+    const warnings = checkHtml(html, options);
 
-    if (!fs.existsSync(metadataPath)) {
-      throw new Error(`Metadata file not found: ${metadataPath}`);
-    }
-
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`HTML file not found: ${filePath}`);
-    }
-
-    const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-    const deprecatedClasses = metadata.bem.css.deprecated.selectors;
-    console.log('Deprecated Classes:', deprecatedClasses)
-    const htmlContent = fs.readFileSync(filePath, 'utf8');
-    parse(htmlContent);
-
-    deprecatedClasses.forEach((className) => {
-      const selectorAst = PostcssSelectorParser.parse(`.${className}`);
-
-      selectorAst.walkClasses((classNode) => {
-        if (classNode.value === className && match(selectorAst)) {
-          stylelint.utils.report({
-            ruleName,
-            result: postcssResult,
-            message: messages.deprecated.replace('%s', className),
-            node: postcssRoot,
-            severity: 'warning',
-          });
-        }
+    warnings.forEach((warning) => {
+      stylelint.utils.report({
+        ruleName,
+        result,
+        message: warning.message,
+        node: root,
+        severity: warning.severity,
       });
     });
   };
