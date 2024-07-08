@@ -8,7 +8,7 @@ const messages = stylelint.utils.ruleMessages(ruleName, {
 });
 
 // Read the token mapping file
-const tokenMappingPath = path.resolve("./src/metadata/slds_classes.json");
+const tokenMappingPath = path.resolve(__dirname, "../metadata/slds_classes.json");
 const sldsClasses = new Set(JSON.parse(fs.readFileSync(tokenMappingPath, 'utf8')));
 
 // Regex to match SLDS classes

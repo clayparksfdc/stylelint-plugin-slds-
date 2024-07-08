@@ -10,7 +10,7 @@ const messages = stylelint.utils.ruleMessages(ruleName, {
 });
 
 // Read the deprecated tokens file
-const tokenMappingPath = path.resolve("./src/metadata/deprecatedHooks.json");
+const tokenMappingPath = path.resolve(__dirname, "../metadata/deprecatedHooks.json");
 const deprecatedTokens = JSON.parse(fs.readFileSync(tokenMappingPath, 'utf8'));
 
 module.exports = stylelint.createPlugin(ruleName, function(primary) {

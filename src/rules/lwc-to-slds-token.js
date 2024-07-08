@@ -10,7 +10,7 @@ const messages = stylelint.utils.ruleMessages(ruleName, {
 });
 
 // Read the LWC to SLDS mapping file
-const tokenMappingPath = path.resolve("./src/metadata/lwcToSlds.json");
+const tokenMappingPath = path.resolve(__dirname, "../metadata/lwcToSlds.json");
 const lwcToSLDS = JSON.parse(fs.readFileSync(tokenMappingPath, 'utf8'));
 
 module.exports = stylelint.createPlugin(ruleName, function(primary) {

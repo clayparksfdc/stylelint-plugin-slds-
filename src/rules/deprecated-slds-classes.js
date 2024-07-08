@@ -8,7 +8,7 @@ const messages = stylelint.utils.ruleMessages(ruleName, {
 });
 
 // Read the deprecated classes file
-const tokenMappingPath = path.resolve("./src/metadata/deprecatedClasses.json");
+const tokenMappingPath = path.resolve(__dirname, "../metadata/deprecatedClasses.json");
 const deprecatedClasses = new Set(JSON.parse(fs.readFileSync(tokenMappingPath, 'utf8')));
 
 // Regex to match classes

@@ -10,7 +10,7 @@ const messages = stylelint.utils.ruleMessages(ruleName, {
 });
 
 // Read the token mapping file
-const tokenMappingPath = path.resolve("./src/metadata/tokenMapping.json");
+const tokenMappingPath = path.resolve(__dirname, "../metadata/tokenMapping.json");
 const tokenMapping = JSON.parse(fs.readFileSync(tokenMappingPath, 'utf8'));
 
 module.exports = stylelint.createPlugin(ruleName, function(primary) {
